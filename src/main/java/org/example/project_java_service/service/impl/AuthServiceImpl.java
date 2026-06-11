@@ -4,6 +4,8 @@ import org.example.project_java_service.model.dto.request.LoginRequest;
 import org.example.project_java_service.model.dto.request.LogoutRequest;
 import org.example.project_java_service.model.dto.request.RefreshTokenRequest;
 import org.example.project_java_service.model.dto.request.RegisterRequest;
+import org.example.project_java_service.model.dto.request.ChangePasswordRequest;
+import org.example.project_java_service.model.dto.request.ForgotPasswordRequest;
 import org.example.project_java_service.model.dto.response.TokenResponse;
 import org.example.project_java_service.model.entity.RefreshToken;
 import org.example.project_java_service.model.entity.User;
@@ -125,5 +127,50 @@ public class AuthServiceImpl implements AuthService {
                 .revoked(false)
                 .build();
         return refreshTokenRepository.save(refreshToken);
+    }
+
+    // ==========================================
+    // FR-10: LOGIC ĐỔI MẬT KHẨU VÀ QUÊN MẬT KHẨU
+    // ==========================================
+
+    @Override
+    @Transactional
+    public String changePassword(ChangePasswordRequest request, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
+
+        // 1. Kiểm tra mật khẩu cũ có khớp trong DB không
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new RuntimeException("Mật khẩu cũ không chính xác!");
+        }
+
+        // 2. Kiểm tra mật khẩu mới và xác nhận mật khẩu
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException("Mật khẩu xác nhận không khớp!");
+        }
+
+        // 3. Mã hóa và lưu mật khẩu mới
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return "Đổi mật khẩu thành công! Lần đăng nhập sau hãy dùng mật khẩu mới.";
+    }
+
+    @Override
+    @Transactional
+    public String forgotPassword(ForgotPasswordRequest request) {
+        // Cần đảm bảo bạn đã thêm hàm Optional<User> findByEmail(String email); vào UserRepository nhé!
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản nào đăng ký với email này!"));
+
+        // Tạo một mật khẩu ngẫu nhiên dài 8 ký tự
+        String newRandomPassword = UUID.randomUUID().toString().substring(0, 8);
+
+        // Mã hóa và lưu mật khẩu mới vào DB
+        user.setPassword(passwordEncoder.encode(newRandomPassword));
+        userRepository.save(user);
+
+        // Trả về thẳng mật khẩu mới để dễ test trên Postman (Thực tế sẽ dùng JavaMailSender để gửi email)
+        return "Mật khẩu mới của bạn là: " + newRandomPassword + " (Vui lòng đăng nhập và đổi lại mật khẩu ngay!)";
     }
 }

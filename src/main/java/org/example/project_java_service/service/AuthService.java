@@ -4,6 +4,8 @@ import org.example.project_java_service.model.dto.request.LoginRequest;
 import org.example.project_java_service.model.dto.request.LogoutRequest;
 import org.example.project_java_service.model.dto.request.RefreshTokenRequest;
 import org.example.project_java_service.model.dto.request.RegisterRequest;
+import org.example.project_java_service.model.dto.request.ChangePasswordRequest;
+import org.example.project_java_service.model.dto.request.ForgotPasswordRequest;
 import org.example.project_java_service.model.dto.response.TokenResponse;
 
 public interface AuthService {
@@ -15,4 +17,9 @@ public interface AuthService {
     TokenResponse refreshToken(RefreshTokenRequest request);
 
     void logout(LogoutRequest request);
+
+
+    String changePassword(ChangePasswordRequest request, String username);
+
+    String forgotPassword(ForgotPasswordRequest request);
 }

@@ -57,8 +57,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // Log lỗi hoặc bỏ qua
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"error\": \"Token không hợp lệ hoặc đã hết hạn! Vui lòng đăng nhập lại.\"}");
+            return;
         }
+
         filterChain.doFilter(request, response);
     }
 }

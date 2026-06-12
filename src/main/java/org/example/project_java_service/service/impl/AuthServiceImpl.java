@@ -17,6 +17,8 @@ import org.example.project_java_service.security.jwt.JwtUtils;
 import org.example.project_java_service.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -36,6 +38,9 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
+
+    // Thêm JavaMailSender để gửi email
+    private final JavaMailSender mailSender;
 
     @Value("${app.jwt.refresh-expiration}")
     private long refreshTokenDurationMs;
@@ -92,7 +97,7 @@ public class AuthServiceImpl implements AuthService {
         return refreshTokenRepository.findByToken(requestRefreshToken)
                 .map(refreshToken -> {
                     if (refreshToken.getExpiryDate().compareTo(Instant.now()) < 0) {
-                        refreshTokenRepository.delete(refreshToken); // Xóa luôn cho nhẹ DB
+                        refreshTokenRepository.delete(refreshToken);
                         throw new RuntimeException("Refresh token đã hết hạn. Vui lòng đăng nhập lại!");
                     }
                     if (refreshToken.isRevoked()) {
@@ -106,7 +111,7 @@ public class AuthServiceImpl implements AuthService {
 
                     return TokenResponse.builder()
                             .accessToken(newAccessToken)
-                            .refreshToken(requestRefreshToken) // Giữ nguyên Refresh Token cũ
+                            .refreshToken(requestRefreshToken)
                             .build();
                 })
                 .orElseThrow(() -> new RuntimeException("Refresh token không tồn tại trong hệ thống!"));
@@ -139,17 +144,14 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
 
-        // 1. Kiểm tra mật khẩu cũ có khớp trong DB không
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             throw new RuntimeException("Mật khẩu cũ không chính xác!");
         }
 
-        // 2. Kiểm tra mật khẩu mới và xác nhận mật khẩu
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new RuntimeException("Mật khẩu xác nhận không khớp!");
         }
 
-        // 3. Mã hóa và lưu mật khẩu mới
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
@@ -159,18 +161,28 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public String forgotPassword(ForgotPasswordRequest request) {
-        // Cần đảm bảo bạn đã thêm hàm Optional<User> findByEmail(String email); vào UserRepository nhé!
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản nào đăng ký với email này!"));
 
-        // Tạo một mật khẩu ngẫu nhiên dài 8 ký tự
+        // 1. Tạo mật khẩu ngẫu nhiên
         String newRandomPassword = UUID.randomUUID().toString().substring(0, 8);
 
-        // Mã hóa và lưu mật khẩu mới vào DB
+        // 2. Lưu vào DB
         user.setPassword(passwordEncoder.encode(newRandomPassword));
         userRepository.save(user);
 
-        // Trả về thẳng mật khẩu mới để dễ test trên Postman (Thực tế sẽ dùng JavaMailSender để gửi email)
-        return "Mật khẩu mới của bạn là: " + newRandomPassword + " (Vui lòng đăng nhập và đổi lại mật khẩu ngay!)";
+        // 3. Gửi mật khẩu mới qua Email
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(user.getEmail());
+        message.setSubject("[Hệ thống Tuyển Dụng] Yêu cầu cấp lại mật khẩu");
+        message.setText("Xin chào " + user.getUsername() + ",\n\n"
+                + "Bạn vừa yêu cầu cấp lại mật khẩu cho tài khoản của mình.\n"
+                + "Mật khẩu mới của bạn là: " + newRandomPassword + "\n\n"
+                + "Vui lòng đăng nhập và tiến hành đổi lại mật khẩu ngay lập tức để đảm bảo an toàn cho tài khoản.\n\n"
+                + "Trân trọng,\nĐội ngũ quản trị.");
+
+        mailSender.send(message);
+
+        return "Mật khẩu mới đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư (bao gồm cả mục Spam) !";
     }
 }

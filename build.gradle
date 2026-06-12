@@ -22,7 +22,7 @@ dependencies {
     // 1. Web & Core
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-aop' // Dùng cho Logging (Aspect)
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
 
     // 2. Database & ORM
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -35,11 +35,14 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
     // 4. Tiện ích (Gửi mail, Lombok)
-    implementation 'org.springframework.boot:spring-boot-starter-mail' // Dùng cho chức năng Quên mật khẩu
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // 5. Testing
+    // 5. OpenAPI / Swagger (Tạo tài liệu API tự động)
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+
+    // 6. Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

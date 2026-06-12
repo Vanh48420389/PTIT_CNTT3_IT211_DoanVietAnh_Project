@@ -1,6 +1,7 @@
 package org.example.project_java_service.security.jwt;
 
 import org.example.project_java_service.security.user.CustomUserDetailsService;
+import org.example.project_java_service.service.RedisTokenBlacklistService; // Bắt buộc phải thêm dòng import này
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +23,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final CustomUserDetailsService userDetailsService;
+    private final RedisTokenBlacklistService redisTokenBlacklistService; // Inject vũ khí Redis vào đây
 
     @Override
     protected void doFilterInternal(
@@ -41,6 +43,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             jwt = authHeader.substring(7);
+
+
+            if (redisTokenBlacklistService.isBlacklisted(jwt)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"error\": \"Tài khoản đã đăng xuất! Token này đã bị vô hiệu hóa.\"}");
+                return;
+            }
+
             username = jwtUtils.extractUsername(jwt);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

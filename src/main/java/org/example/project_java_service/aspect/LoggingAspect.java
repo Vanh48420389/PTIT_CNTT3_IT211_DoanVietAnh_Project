@@ -26,7 +26,7 @@ public class LoggingAspect {
 
         stopWatch.stop();
 
-        logger.info("⏱️ [EXECUTION TIME] Hàm {}.{}() thực thi mất: {} ms",
+        logger.info(" [EXECUTION TIME] Hàm {}.{}() thực thi mất: {} ms",
                 joinPoint.getSignature().getDeclaringType().getSimpleName(),
                 joinPoint.getSignature().getName(),
                 stopWatch.getTotalTimeMillis());

@@ -15,7 +15,11 @@ import org.example.project_java_service.repository.UserRepository;
 import org.example.project_java_service.security.user.CustomUserDetails;
 import org.example.project_java_service.security.jwt.JwtUtils;
 import org.example.project_java_service.service.AuthService;
+import org.example.project_java_service.service.RedisTokenBlacklistService;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j; // Đã thêm thư viện Log
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -29,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -38,9 +43,10 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
-
-    // Thêm JavaMailSender để gửi email
     private final JavaMailSender mailSender;
+
+    private final RedisTokenBlacklistService redisTokenBlacklistService;
+    private final HttpServletRequest httpServletRequest;
 
     @Value("${app.jwt.refresh-expiration}")
     private long refreshTokenDurationMs;
@@ -122,6 +128,19 @@ public class AuthServiceImpl implements AuthService {
     public void logout(LogoutRequest request) {
         refreshTokenRepository.findByToken(request.getRefreshToken())
                 .ifPresent(refreshTokenRepository::delete);
+
+        String authHeader = httpServletRequest.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String accessToken = authHeader.substring(7);
+            try {
+                long expirationTime = jwtUtils.extractExpiration(accessToken).getTime() - System.currentTimeMillis();
+                if (expirationTime > 0) {
+                    redisTokenBlacklistService.addToBlacklist(accessToken, expirationTime);
+                }
+            } catch (Exception e) {
+                log.warn("Lỗi khi xử lý Access Token lúc Logout (Có thể Token đã hết hạn sẵn): {}", e.getMessage());
+            }
+        }
     }
 
     private RefreshToken createRefreshToken(User user) {
@@ -134,9 +153,6 @@ public class AuthServiceImpl implements AuthService {
         return refreshTokenRepository.save(refreshToken);
     }
 
-    // ==========================================
-    // FR-10: LOGIC ĐỔI MẬT KHẨU VÀ QUÊN MẬT KHẨU
-    // ==========================================
 
     @Override
     @Transactional
@@ -164,14 +180,11 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản nào đăng ký với email này!"));
 
-        // 1. Tạo mật khẩu ngẫu nhiên
         String newRandomPassword = UUID.randomUUID().toString().substring(0, 8);
 
-        // 2. Lưu vào DB
         user.setPassword(passwordEncoder.encode(newRandomPassword));
         userRepository.save(user);
 
-        // 3. Gửi mật khẩu mới qua Email
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(user.getEmail());
         message.setSubject("[Hệ thống Tuyển Dụng] Yêu cầu cấp lại mật khẩu");

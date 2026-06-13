@@ -1,7 +1,7 @@
 package org.example.project_java_service.security.jwt;
 
 import org.example.project_java_service.security.user.CustomUserDetailsService;
-import org.example.project_java_service.service.RedisTokenBlacklistService; // Bắt buộc phải thêm dòng import này
+import org.example.project_java_service.service.RedisTokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +23,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final CustomUserDetailsService userDetailsService;
-    private final RedisTokenBlacklistService redisTokenBlacklistService; // Inject vũ khí Redis vào đây
+    private final RedisTokenBlacklistService redisTokenBlacklistService;
 
     @Override
     protected void doFilterInternal(
@@ -43,7 +43,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             jwt = authHeader.substring(7);
-
 
             if (redisTokenBlacklistService.isBlacklisted(jwt)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -68,6 +67,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
+            // ==========================================
+            // Đã thêm 2 dòng in lỗi ra Console để "vạch mặt" kẻ phá bĩnh
+            // ==========================================
+            System.out.println("============== LỖI TẠI MÀNG LỌC JWT ==============");
+            e.printStackTrace();
+            // ==========================================
+
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"error\": \"Token không hợp lệ hoặc đã hết hạn! Vui lòng đăng nhập lại.\"}");

@@ -49,7 +49,6 @@ public class AuthController {
             @Valid @RequestBody ChangePasswordRequest request,
             Authentication authentication) {
 
-        // Vì AuthController đang được permitAll(), ta phải tự kiểm tra xem user đã có Token chưa
         if (authentication == null || !authentication.isAuthenticated() || authentication.getName().equals("anonymousUser")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Vui lòng đăng nhập để thực hiện chức năng này!");
         }

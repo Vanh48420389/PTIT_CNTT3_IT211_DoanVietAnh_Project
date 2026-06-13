@@ -10,8 +10,8 @@ import lombok.AllArgsConstructor; // Thêm import này
 import lombok.NoArgsConstructor;  // Thêm import này
 
 @Data
-@AllArgsConstructor // Tự động sinh Constructor có đầy đủ tham số
-@NoArgsConstructor  // Tự động sinh Constructor rỗng không tham số
+@AllArgsConstructor
+@NoArgsConstructor
 public class RegisterRequest {
     @NotBlank(message = "Username không được để trống")
     @Size(min = 4, max = 50, message = "Username phải từ 4 đến 50 ký tự")

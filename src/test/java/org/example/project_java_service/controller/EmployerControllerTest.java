@@ -96,7 +96,7 @@ class EmployerControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/employer/jobs/applications/10/status")
                         .principal(authToken)
-                        .param("status", "PENDING")) // Fix cứng 1 giá trị enum hợp lệ
+                        .param("status", "PENDING"))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 }

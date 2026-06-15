@@ -28,7 +28,7 @@ public class EmployerServiceImpl implements EmployerService {
 
     private final JobPostingRepository jobPostingRepository;
     private final UserRepository userRepository;
-    private final JobApplicationRepository jobApplicationRepository; // Thêm repository xử lý hồ sơ
+    private final JobApplicationRepository jobApplicationRepository;
 
     private User getEmployerByUsername(String username) {
         return userRepository.findByUsername(username)

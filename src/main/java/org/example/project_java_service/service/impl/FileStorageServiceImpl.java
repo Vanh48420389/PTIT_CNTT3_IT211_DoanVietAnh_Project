@@ -14,7 +14,6 @@ import java.util.UUID;
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
 
-    // Thư mục chứa file sẽ tự động tạo ở ngay trong thư mục gốc của project
     private final Path fileStorageLocation = Paths.get("uploads/cvs").toAbsolutePath().normalize();
 
     public FileStorageServiceImpl() {

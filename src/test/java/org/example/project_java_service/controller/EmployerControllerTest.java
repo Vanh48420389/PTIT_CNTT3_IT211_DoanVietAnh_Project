@@ -33,7 +33,6 @@ class EmployerControllerTest {
 
     @BeforeEach
     void setUp() {
-        // 1. Cấp quyền ROLE_EMPLOYER trực tiếp vào bộ nhớ để vượt qua @PreAuthorize
         authToken = new UsernamePasswordAuthenticationToken(
                 "employer_test",
                 null,
@@ -41,11 +40,9 @@ class EmployerControllerTest {
         );
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
-        // 2. Tạo chuỗi JSON hợp lệ để vượt qua màng lọc @Valid của DTO
         validJsonRequest = "{\"title\":\"Tuyển Lập trình viên Java\",\"description\":\"Biết Spring Boot\",\"salaryRange\":\"10-20 Triệu\"}";
     }
 
-    // Test 1: Tạo tin tuyển dụng
     @Test
     void testCreateJob_Success() throws Exception {
         Mockito.when(employerService.createJob(Mockito.any(), Mockito.eq("employer_test")))
@@ -54,11 +51,10 @@ class EmployerControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/employer/jobs")
                         .principal(authToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validJsonRequest)) // Truyền JSON hợp lệ vào đây
+                        .content(validJsonRequest))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
-    // Test 2: Lấy danh sách tin
     @Test
     void testGetMyJobs_Success() throws Exception {
         Mockito.when(employerService.getMyJobs(Mockito.eq("employer_test"), Mockito.anyInt(), Mockito.anyInt()))
@@ -71,7 +67,6 @@ class EmployerControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
-    // Test 3: Sửa tin
     @Test
     void testUpdateJob_Success() throws Exception {
         Mockito.when(employerService.updateJob(Mockito.eq(1L), Mockito.any(), Mockito.eq("employer_test")))
@@ -80,11 +75,10 @@ class EmployerControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/employer/jobs/1")
                         .principal(authToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validJsonRequest)) // Truyền JSON hợp lệ vào đây
+                        .content(validJsonRequest))
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
-    // Test 4: Xóa tin
     @Test
     void testDeleteJob_Success() throws Exception {
         Mockito.when(employerService.deleteJob(Mockito.eq(1L), Mockito.eq("employer_test")))
@@ -95,7 +89,6 @@ class EmployerControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
-    // Test 5: Cập nhật trạng thái hồ sơ
     @Test
     void testUpdateApplicationStatus_Success() throws Exception {
         Mockito.when(employerService.updateApplicationStatus(Mockito.eq(10L), Mockito.any(), Mockito.eq("employer_test")))

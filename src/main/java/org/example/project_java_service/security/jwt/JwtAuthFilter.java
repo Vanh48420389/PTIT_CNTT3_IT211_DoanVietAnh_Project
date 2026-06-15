@@ -67,12 +67,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // ==========================================
-            // Đã thêm 2 dòng in lỗi ra Console để "vạch mặt" kẻ phá bĩnh
-            // ==========================================
+
             System.out.println("============== LỖI TẠI MÀNG LỌC JWT ==============");
             e.printStackTrace();
-            // ==========================================
 
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");

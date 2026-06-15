@@ -20,7 +20,6 @@ public interface EmployerService {
 
     // 4. Xóa tin
     String deleteJob(Long jobId, String username);
-    // ... các hàm cũ giữ nguyên
 
     // 5. Xem danh sách ứng viên nộp vào 1 công việc cụ thể
     List<ApplicationResponse> getApplicationsForJob(Long jobId, String username);

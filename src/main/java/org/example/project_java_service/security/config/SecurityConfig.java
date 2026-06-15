@@ -34,7 +34,6 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // ĐÃ SỬA DÒNG NÀY: Mở cửa thêm cho thư mục public
                         .requestMatchers("/api/v1/auth/**", "/api/v1/public/**").permitAll()
                         .anyRequest().authenticated()
                 )
